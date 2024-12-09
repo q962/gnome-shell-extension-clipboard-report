@@ -1,0 +1,7 @@
+{
+  "name": "Clipboard Report",
+  "description": "Publish Clipboard data",
+  "uuid": "clipboard-report@q962.github.io",
+  "gettext-domain": "clipboard-report@q962.github.io",
+  "shell-version": ["47"]
+}
