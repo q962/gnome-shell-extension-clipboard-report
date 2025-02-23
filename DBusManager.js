@@ -1,7 +1,15 @@
-import GObject from "gi://GObject";
 import Gio from "gi://Gio";
 import GioUnix from "gi://GioUnix";
 import GLib from "gi://GLib";
+import Meta from "gi://Meta";
+import Shell from "gi://Shell";
+
+import { stream_to_array } from "./utils.js";
+
+const ByteArray = imports.byteArray;
+
+const metaDisplay = Shell.Global.get().get_display();
+const selection = metaDisplay.get_selection();
 
 const encoder = new TextEncoder();
 
@@ -123,7 +131,7 @@ class Server {
       return;
     }
 
-    if (fd_list.get_length() == 0) {
+    if (!fd_list || fd_list.get_length() == 0) {
       invocation.return_dbus_error(
         "io.github.q962.ClipboardReport.register",
         _("Need fd!")
@@ -152,6 +160,41 @@ class Server {
 
     invocation.return_value(null);
   }
+
+  async setAsync(args, invocation) {
+    let [mimetype] = args;
+    try {
+      let message = invocation.get_message();
+      let fd_list = message.get_unix_fd_list();
+
+      if (!fd_list || fd_list.get_length() == 0) {
+        invocation.return_dbus_error(
+          "io.github.q962.ClipboardReport.set",
+          _("Need fd!")
+        );
+        return;
+      }
+
+      let fd = fd_list.get(0);
+
+      let istream = GioUnix.InputStream.new(fd, false);
+      stream_to_array(istream, (array) => {
+        print(ByteArray.toString(array));
+
+        let selection_source = Meta.SelectionSourceMemory.new(mimetype, array);
+        selection.set_owner(
+          Meta.SelectionType.SELECTION_CLIPBOARD,
+          selection_source
+        );
+
+        GLib.close(fd);
+
+        invocation.return_value(null);
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
 }
 
 class DBusManager {
@@ -172,6 +215,9 @@ class DBusManager {
         </method>
         <method name="unregister">
           <arg type="as" direction="in" name="mimetypes"/>
+        </method>
+        <method name="set">
+          <arg type="s" direction="in" name="mimetype"/>
         </method>
       </interface>
     </node>`;

@@ -17,6 +17,9 @@ Register the MIME types of interest via dbus and set the corresponding FDs.
 				unregister(string[])
 					Remove the corresponding mimetype.
 					Empty means remove all.
+				set(string)
+					Set clipboard by mimetype.
+					Using the content from fd_list[0].
 
 ## Data Format
 
