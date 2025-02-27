@@ -91,7 +91,7 @@ class Clients {
     );
 
     if (remove_count == data.mimetypes.length) {
-      Glib.close(data.fd);
+      GLib.close(data.fd);
       delete this.#clients[client];
     } else {
       for (let i = data.mimetypes.length - 1; i >= 0; i--) {
